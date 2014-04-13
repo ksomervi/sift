@@ -1,0 +1,8 @@
+# ignore all files ending with ~
+*~
+
+*.tcl 
+
+*.log
+
+test

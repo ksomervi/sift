@@ -23,3 +23,32 @@ Theory of operation:
   greater) using Pillow
 - Upload the images to the wordpress site using wordpress-xmlrpc
 
+Usage Overview:
+
+usage: sift.py [-h] [-v] filename [filename ...]
+
+Formats and uploads images to a wordpress site
+
+positional arguments:
+  filename       image files to be processed and uploaded
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -v, --verbose  print/log verbose output
+
+BrokenLogo internet Production (BLiP) Kevin Somervill copyright 2014
+
+I wrote this for my wife, who abhors commandline tools so I created a desktop
+launcher that she can drag her images onto it.
+
+For xfce, this is what I've put on the desktop (named SIFT.desktop)
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=SIFT
+Comment= Simple Image Fix-it Tool
+Exec=/path/to/sift/sift.py -v %F
+Icon=
+Path=/path/to/working/directory
+Terminal=true
+StartupNotify=false

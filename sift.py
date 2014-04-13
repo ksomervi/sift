@@ -11,6 +11,7 @@
 
 import argparse
 import configparser
+import mimetypes
 import os
 import subprocess
 from PIL import Image
@@ -20,12 +21,14 @@ from wordpress_xmlrpc.compat import xmlrpc_client
 from wordpress_xmlrpc.methods import media, posts
 
 def parse_configuration(logfile,DEBUG=False):
-    logfile.write("parsing configuration file\n")
     config = configparser.ConfigParser()
     config.read(os.path.expanduser('~/.sift.cfg'))
     # We should do something if the config file is not found
 
-    logfile.write("configuration file parsed\n")
+    logfile.write("Images to be processed:\n")
+    for f in args.files:
+        logfile.write(" - " + f)
+    logfile.write('\n')
     return config
 
 def parse_arguments():
@@ -42,38 +45,58 @@ def parse_arguments():
     args = parser.parse_args()
     return args
 
-def process_images(image_ary, max_width, out_dir, verbose=None):
+def process_images(image_ary, max_width, out_dir, logfile=None):
     dest_ary = []
-    for img in image_ary:
-        if verbose:
-            print("processing image: " + img)
+    #autorot_cmd = "jhead --autorot"
+    #resize_cmd = "convert -scale " + str(max_width) + "\\>"
 
-        dest = os.path.basename(img)
-
-        im = Image.open(img)
-        xpix, ypix = im.size
-        print("filename: " + dest 
+    for filename in image_ary:
+        img = Image.open(filename)
+        xpix, ypix = img.size
+        print("processing image: " + filename
                 + " (" + str(xpix) + "x" + str(ypix) + ")" )
-        if max_width < xpix:
+
+        dest = os.path.join(out_dir, os.path.basename(filename))
+        if max_width > 0 and max_width < xpix:
             scale = float(max_width)/float(xpix)
             ydim  = int(scale*ypix)
             print("Resizing image to (" +str(max_width) + "x" + str(ydim) +")")
-            im = im.resize((max_width, ydim))
+            img = img.resize((max_width, ydim))
         
-        im.save(dest)
+        img.save(dest)
+        xdim, ydim = img.size
+        if logfile:
+            logfile.write("saved updated image to " + dest 
+                    + " (" + str(xdim) + "x" + str(ydim) + ")\n")
+
         dest_ary.append(dest)
+        
+    return dest_ary
 
 def upload_images(client, image_ary, logfile=None):
-    for image in image_ary:
-        data = {'name' : dest, 'type' : 'image/jpg' }
-        #data['type'] = mimetypes.read_mime_types(filename)
-        #or mimetypes.guess_type(filename)[0]
-        
-        with open(dest, 'rb') as m:
-            data['bits'] = xmlrpc_client.Binary(m.read())
-        print ("Uploading the image")
-        response = client.call(media.UploadFile(data))
+    data = {}
+    for filename in image_ary:
+        data['name'] = os.path.basename(filename)
+        base, ext = os.path.splitext(data['name'])
+        if ext.lower() == ".jpg":
+            data['type'] = "image/jpg"
+        elif ext.lower() == ".png":
+            data['type'] = "image/png"
+        elif ext.lower() == ".gif":
+            data['type'] = "image/gif"
+        else:
+            print("Unknown image type for extension '" + ext + "'")
+            continue
 
+        if logfile:
+            logfile.write("Uploading " + data['name'] + " (" 
+                    + data['type'] + ")\n")
+        
+        with open(filename, 'rb') as img:
+            data['bits'] = xmlrpc_client.Binary(img.read())
+
+
+        response = client.call(media.UploadFile(data))
         # response == { 'id': 6, 'file': 'picture.jpg'
         #       'url': 'http://.../picture.jpg', 'type': 'image/jpg' }
         if logfile:
@@ -85,35 +108,38 @@ if __name__ == "__main__":
     logfile = open('sift.log', 'w')
     args = parse_arguments()
     
-    logfile.write("Images to be processed:\n")
-    for f in args.files:
-        logfile.write(" - " + f)
-    logfile.write('\n')
-    
     config = parse_configuration(logfile)
-    url = config.get('wordpress', 'url') + "/xmlrpc.php"
-    user = config.get('wordpress', 'user') 
-    passwd = config.get('wordpress', 'password')
-    max_width = config.getint('image', 'max_width')
-    out_dir = config.get('image', 'out_dir')
-    upload = config.getboolean('wordpress', 'upload')
+    try:
+        url = config.get('wordpress', 'url') + "/xmlrpc.php"
+        user = config.get('wordpress', 'user') 
+        passwd = config.get('wordpress', 'password')
+        upload = config.getboolean('wordpress', 'upload', fallback=True)
+    except (configparser.NoSectionError, configparser.NoOptionError):
+        print("Not uploading. Missing or incomplete wordpress configuration.")
+        upload = False
+    else:
+        logfile.write("URL: " + url + '\n')
+        logfile.write("User: " + user + '\n')
+
+    if upload == False:
+        logfile.write("Not uploading images.\n")
+
+    max_width = config.getint('image', 'max_width', fallback=0)
+    out_dir = config.get('image', 'out_dir', fallback=".")
+        
+    logfile.write("Image width: " + str(max_width) + '\n')
+    logfile.write("Image output directory: " + out_dir + '\n')
 
     if os.path.isdir(out_dir) == False:
         print("Creating directory for images...")
 
-    logfile.write("URL: " + url + '\n')
-    logfile.write("User: " + user + '\n')
-    logfile.write("Image width: " + str(max_width) + '\n')
+    image_ary = process_images(args.files, max_width, out_dir, logfile)
 
-    autorot_cmd = "jhead --autorot"
-    resize_cmd = "convert -scale " + str(max_width) + "\\>"
-
-    image_ary = process_images(args.files, max_width, out_dir)
     
     if upload:
         print ("Connecting to wordpress site...")
         client = Client(url, user, passwd)
 
-        print("Uploading images")
-        #upload_images(client, image_ary)
+        print("Uploading images...")
+        upload_images(client, image_ary, logfile)
 
