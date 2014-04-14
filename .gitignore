@@ -1,8 +1,10 @@
 # ignore all files ending with ~
 *~
 
-*.tcl 
-
 *.log
 
+# Directory for test files
 test
+
+# Directory for things I'm not using yet.
+hold
