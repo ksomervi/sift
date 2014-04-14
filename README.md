@@ -6,7 +6,8 @@ Simple Image Fix-it Tool
 sift is a python script used to shrinkticate images to a reasonable size and
 upload them to a wordpress site.
 
-Currently, works (barely).
+Currently status (April 11, 2014):
+- Works (mostly).
 
 Todo:
 - Add support for creating image directory
@@ -25,30 +26,31 @@ Theory of operation:
 
 Usage Overview:
 
-usage: sift.py [-h] [-v] filename [filename ...]
+    usage: sift.py [-h] [-v] filename [filename ...]
 
-Formats and uploads images to a wordpress site
+    Formats and uploads images to a wordpress site
 
-positional arguments:
-  filename       image files to be processed and uploaded
+    positional arguments:
+      filename       image files to be processed and uploaded
 
-optional arguments:
-  -h, --help     show this help message and exit
-  -v, --verbose  print/log verbose output
+    optional arguments:
+      -h, --help     show this help message and exit
+      -v, --verbose  print/log verbose output
 
-BrokenLogo internet Production (BLiP) Kevin Somervill copyright 2014
+    BrokenLogo internet Production (BLiP) Kevin Somervill copyright 2014
 
-I wrote this for my wife, who abhors commandline tools so I created a desktop
-launcher that she can drag her images onto it.
+I wrote this for my wife. She abhors commandline tools so I created a desktop
+launcher that she can drag her images onto.
 
 For xfce, this is what I've put on the desktop (named SIFT.desktop)
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=SIFT
-Comment= Simple Image Fix-it Tool
-Exec=/path/to/sift/sift.py -v %F
-Icon=
-Path=/path/to/working/directory
-Terminal=true
-StartupNotify=false
+
+    [Desktop Entry]
+    Version=1.0
+    Type=Application
+    Name=SIFT
+    Comment= Simple Image Fix-it Tool
+    Exec=/path/to/sift/sift.py -v %F
+    Icon=
+    Path=/path/to/working/directory
+    Terminal=true
+    StartupNotify=false
