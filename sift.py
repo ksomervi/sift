@@ -77,14 +77,15 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
 def upload_images(client, image_ary, logfile=None):
     data = {}
     for filename in image_ary:
-        data['name'] = os.path.basename(filename)
-        base, ext = os.path.splitext(data['name'])
+        name = os.path.basename(filename)
+        base, ext = os.path.splitext(name)
+        data['name'] = name
         if ext.lower() == ".jpg":
-            data['type'] = "image/jpg"
+            data['type'] = 'image/jpeg'
         elif ext.lower() == ".png":
-            data['type'] = "image/png"
+            data['type'] = 'image/png'
         elif ext.lower() == ".gif":
-            data['type'] = "image/gif"
+            data['type'] = 'image/gif'
         else:
             print("Unknown image type for extension '" + ext + "'")
             if logfile:
