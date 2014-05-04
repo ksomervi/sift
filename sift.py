@@ -20,6 +20,7 @@ from wordpress_xmlrpc import Client, WordPressPost
 from wordpress_xmlrpc.compat import xmlrpc_client
 from wordpress_xmlrpc.methods import media, posts
 
+
 def parse_configuration(logfile, verbose=False):
     config = configparser.ConfigParser()
     if verbose:
@@ -28,6 +29,7 @@ def parse_configuration(logfile, verbose=False):
     # We should do something if the config file is not found
 
     return config
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
@@ -43,6 +45,7 @@ def parse_arguments():
 
     args = parser.parse_args()
     return args
+
 
 def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
     dest_ary = []
@@ -74,7 +77,8 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
         
     return dest_ary
 
-def upload_images(client, image_ary, logfile=None):
+
+def upload_images(client, image_ary, verbose=False, logfile=None):
     data = {}
     for filename in image_ary:
         name = os.path.basename(filename)
@@ -94,6 +98,9 @@ def upload_images(client, image_ary, logfile=None):
                 logfile.write("Skipping '" + filename + "'\n")
             continue
 
+        if verbose:
+            print("Uploading " + data['name'] + " (" + data['type'] + ")")
+
         if logfile:
             logfile.write("Uploading " + data['name'] + " (" 
                     + data['type'] + ")\n")
@@ -101,13 +108,14 @@ def upload_images(client, image_ary, logfile=None):
         with open(filename, 'rb') as img:
             data['bits'] = xmlrpc_client.Binary(img.read())
 
-
         response = client.call(media.UploadFile(data))
         # response == { 'id': 6, 'file': 'picture.jpg'
-        #       'url': 'http://.../picture.jpg', 'type': 'image/jpg' }
+        #       'url': 'http://.../picture.jpg', 'type': 'image/jpeg' }
         if logfile:
             logfile.write("[id: " + response['id'] + "] ")
-            logfile.write("url: " + response['url'] + "\n")
+            logfile.write("mimetype: " + response['type'] + "\n")
+            logfile.write("    url: " + response['url'] + "\n")
+
 
 if __name__ == "__main__":
     # Open a log file
@@ -155,5 +163,5 @@ if __name__ == "__main__":
         if args.verbose:
             logfile.write("Uploading images...\n")
 
-        upload_images(client, image_ary, logfile)
+        upload_images(client, image_ary, args.verbose, logfile)
 
