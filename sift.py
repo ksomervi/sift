@@ -14,18 +14,21 @@ import configparser
 import mimetypes
 import os
 import subprocess
-from PIL import Image
+from PIL import Image, ImageFile
 
 from wordpress_xmlrpc import Client, WordPressPost
 from wordpress_xmlrpc.compat import xmlrpc_client
 from wordpress_xmlrpc.methods import media, posts
 
 
-def parse_configuration(logfile, verbose=False):
+def parse_configuration(cfg_file, logfile, verbose=False):
     config = configparser.ConfigParser()
+    if args.debug:
+        print("reading config file " + cfg_file)
+
     if verbose:
-        logfile.write("reading config file")
-    config.read(os.path.expanduser('~/.sift.cfg'))
+        logfile.write("reading config file " + cfg_file)
+    config.read(os.path.expanduser(cfg_file))
     # We should do something if the config file is not found
 
     return config
@@ -43,14 +46,40 @@ def parse_arguments():
     parser.add_argument("-v", "--verbose", action='store_true',
             help="print/log verbose output")
 
+    parser.add_argument("-D", "--debug", action='store_true',
+            help="print debug output")
+
+    parser.add_argument("-C", "--config", type=str, nargs="?",
+            default="~/.sift.cfg",
+            help="set config file")
+
     args = parser.parse_args()
     return args
 
+# This part taken blatantly from Kyle Fox's fix_orientation patch. This will
+# be integrated such that it's not a plain copy and paste.
+
+# The EXIF tag that holds orientation data.
+EXIF_ORIENTATION_TAG = 274
+
+# Obviously the only ones to process are 3, 6 and 8.
+# All are documented here for thoroughness.
+ORIENTATIONS = {
+    1: ("Normal", 0),
+    2: ("Mirrored left-to-right", 0),
+    3: ("Rotated 180 degrees", 180),
+    4: ("Mirrored top-to-bottom", 0),
+    5: ("Mirrored along top-left diagonal", 0),
+    6: ("Rotated 90 degrees", -90),
+    7: ("Mirrored along top-right diagonal", 0),
+    8: ("Rotated 270 degrees", -270)
+}
 
 def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
+    if args.debug:
+        print("Debug process_images()")
+
     dest_ary = []
-    #autorot_cmd = "jhead --autorot"
-    #resize_cmd = "convert -scale " + str(max_width) + "\\>"
 
     for filename in image_ary:
         img = Image.open(filename)
@@ -58,7 +87,25 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
         if logfile:
             logfile.write("processing image: " + filename + "\n")
 
-        dest = os.path.join(out_dir, os.path.basename(filename))
+        if img.format == 'JPEG':
+            if args.debug:
+                print("Image format: " + img.format)
+            try:
+                # Check the image's orientation
+                orientation = img._getexif()[EXIF_ORIENTATION_TAG]
+            except (TypeError, AttributeError, KeyError):
+                raise ValueError("Image file has no EXIF data.")
+
+            print("Orientation: (" + str(orientation) + ") "
+                    + ORIENTATIONS[orientation][0])
+
+            # Fix the orientation if not correct
+            if orientation in [3,6,8]:
+                degrees = ORIENTATIONS[orientation][1]
+                print("rotating image " + str(degrees) + " degrees" )
+                img = img.rotate(degrees)
+
+        # Resize the image
         if max_width > 0 and max_width < xpix:
             scale = float(max_width)/float(xpix)
             ydim  = int(scale*ypix)
@@ -66,7 +113,9 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
                 logfile.write("Resizing image to (" + str(max_width)
                         + "x" + str(ydim) +")\n")
             img = img.resize((max_width, ydim))
-        
+
+        # Add mark if requested
+        dest = os.path.join(out_dir, os.path.basename(filename))
         img.save(dest)
         xdim, ydim = img.size
         if verbose and logfile:
@@ -76,7 +125,6 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
         dest_ary.append(dest)
         
     return dest_ary
-
 
 def upload_images(client, image_ary, verbose=False, logfile=None):
     data = {}
@@ -121,8 +169,10 @@ if __name__ == "__main__":
     # Open a log file
     logfile = open('sift.log', 'w')
     args = parse_arguments()
-                
-    config = parse_configuration(logfile)
+    if args.debug:
+        print("Debug mode")
+
+    config = parse_configuration(args.config, logfile)
     try:
         url = config.get('wordpress', 'url') + "/xmlrpc.php"
         user = config.get('wordpress', 'user') 
