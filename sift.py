@@ -83,11 +83,10 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
 
     for filename in image_ary:
         img = Image.open(filename)
-        xpix, ypix = img.size
         if logfile:
             logfile.write("processing image: " + filename + "\n")
 
-        if img.format == 'JPEG':
+        if rotate_images and (img.format == 'JPEG'):
             if args.debug:
                 print("Image format: " + img.format)
             try:
@@ -106,6 +105,7 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
                 img = img.rotate(degrees)
 
         # Resize the image
+        xpix, ypix = img.size
         if max_width > 0 and max_width < xpix:
             scale = float(max_width)/float(xpix)
             ydim  = int(scale*ypix)
@@ -191,10 +191,12 @@ if __name__ == "__main__":
 
     max_width = config.getint('image', 'max_width', fallback=0)
     out_dir = config.get('image', 'out_dir', fallback=".")
-        
+    rotate_images = config.getboolean('image', 'rotate', fallback=True) 
+
     if args.verbose:
         logfile.write("Image width: " + str(max_width) + '\n')
         logfile.write("Image output directory: " + out_dir + '\n')
+        logfile.write("Rotate image: " + str(rotate_images) + '\n')
 
     logfile.write("Images to be processed:\n")
     for f in args.files:
