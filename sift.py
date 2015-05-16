@@ -21,6 +21,7 @@ from wordpress_xmlrpc import Client, WordPressPost
 from wordpress_xmlrpc.compat import xmlrpc_client
 from wordpress_xmlrpc.methods import media, posts
 
+SIFT_VERSION = "1.04"
 
 def parse_configuration(cfg_file, logfile, verbose=False):
     config = configparser.ConfigParser()
@@ -39,13 +40,16 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         description = "Formats and uploads images to a wordpress site",
         epilog = "BrokenLogo internet Production (BLiP)\n" 
-            + "Kevin Somervill copyright 2014"
+            + "Kevin Somervill copyright 2015"
         )
     parser.add_argument("files", metavar="filename", type=str, nargs="+",
             help="image files to be processed and uploaded")
 
     parser.add_argument("-v", "--verbose", action='store_true',
             help="print/log verbose output")
+
+    parser.add_argument('-V', '--version', action='version',
+            version='%(prog)s ' + SIFT_VERSION)
 
     parser.add_argument("-D", "--debug", action='store_true',
             help="print debug output")
@@ -171,6 +175,11 @@ if __name__ == "__main__":
     args = parse_arguments()
     if args.debug:
         print("Debug mode")
+        print("Version " + SIFT_VERSION)
+
+    if args.version:
+        print("Version " + SIFT_VERSION)
+        quit()
 
     config = parse_configuration(args.config, logfile)
     try:
