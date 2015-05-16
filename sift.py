@@ -11,6 +11,7 @@
 
 import argparse
 import configparser
+from datetime import date
 import mimetypes
 import os
 import subprocess
@@ -164,7 +165,6 @@ def upload_images(client, image_ary, verbose=False, logfile=None):
             logfile.write("mimetype: " + response['type'] + "\n")
             logfile.write("    url: " + response['url'] + "\n")
 
-
 if __name__ == "__main__":
     # Open a log file
     logfile = open('sift.log', 'w')
@@ -193,6 +193,8 @@ if __name__ == "__main__":
     out_dir = config.get('image', 'out_dir', fallback=".")
     rotate_images = config.getboolean('image', 'rotate', fallback=True) 
 
+    out_dir = date.today().strftime(out_dir + "/%Y/%m")
+
     if args.verbose:
         logfile.write("Image width: " + str(max_width) + '\n')
         logfile.write("Image output directory: " + out_dir + '\n')
@@ -202,8 +204,9 @@ if __name__ == "__main__":
     for f in args.files:
         logfile.write(" - " + f + "\n")
 
-    if os.path.isdir(out_dir) == False:
+    if os.path.exists(out_dir) == False:
         logfile.write("Creating directory '" + out_dir + "' for images...\n")
+        os.makedirs(out_dir)
 
     image_ary = process_images(args.files, max_width, out_dir, 
                                 args.verbose, logfile)
