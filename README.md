@@ -26,7 +26,7 @@ Theory of operation:
 
 Usage Overview:
 
-    usage: sift.py [-h] [-v] [-D] [-C [CONFIG]] filename [filename ...]
+    usage: sift.py [-h] [-v] [-V] [-D] [-C [CONFIG]] filename [filename ...]
     
     Formats and uploads images to a wordpress site
     
@@ -36,11 +36,12 @@ Usage Overview:
     optional arguments:
       -h, --help            show this help message and exit
       -v, --verbose         print/log verbose output
+      -V, --version         show program's version number and exit
       -D, --debug           print debug output
       -C [CONFIG], --config [CONFIG]
                             set config file
     
-    BrokenLogo internet Production (BLiP) Kevin Somervill copyright 2014
+    BrokenLogo internet Production (BLiP) Kevin Somervill copyright 2015
 
 
 I wrote this for my wife. She abhors commandline tools so I created a desktop
