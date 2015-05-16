@@ -177,10 +177,6 @@ if __name__ == "__main__":
         print("Debug mode")
         print("Version " + SIFT_VERSION)
 
-    if args.version:
-        print("Version " + SIFT_VERSION)
-        quit()
-
     config = parse_configuration(args.config, logfile)
     try:
         url = config.get('wordpress', 'url') + "/xmlrpc.php"
