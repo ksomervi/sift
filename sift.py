@@ -21,7 +21,7 @@ from wordpress_xmlrpc import Client, WordPressPost
 from wordpress_xmlrpc.compat import xmlrpc_client
 from wordpress_xmlrpc.methods import media, posts
 
-SIFT_VERSION = "1.04"
+SIFT_VERSION = "1.05"
 
 def parse_configuration(cfg_file, logfile, verbose=False):
     config = configparser.ConfigParser()
@@ -40,7 +40,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         description = "Formats and uploads images to a wordpress site",
         epilog = "BrokenLogo internet Production (BLiP)\n" 
-            + "Kevin Somervill copyright 2015"
+            + "Kevin Somervill copyright 2016"
         )
     parser.add_argument("files", metavar="filename", type=str, nargs="+",
             help="image files to be processed and uploaded")
@@ -91,6 +91,11 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
         if logfile:
             logfile.write("processing image: " + filename + "\n")
 
+        xpix, ypix = img.size
+        if args.debug and logfile:
+            logfile.write("Image dimensions before rotation: "
+                  + " (" + str(xpix) + "x" + str(ypix) + ")\n")
+
         if rotate_images and (img.format == 'JPEG'):
             if args.debug:
                 print("Image format: " + img.format)
@@ -107,10 +112,14 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
             if orientation in [3,6,8]:
                 degrees = ORIENTATIONS[orientation][1]
                 print("rotating image " + str(degrees) + " degrees" )
-                img = img.rotate(degrees)
+                img = img.rotate(degrees, expand=True)
+
+        xpix, ypix = img.size
+        if args.debug and logfile:
+            logfle.write("Image dimensions after rotation: "
+                  + " (" + str(xpix) + "x" + str(ypix) + ")\n")
 
         # Resize the image
-        xpix, ypix = img.size
         if max_width > 0 and max_width < xpix:
             scale = float(max_width)/float(xpix)
             ydim  = int(scale*ypix)
@@ -125,7 +134,7 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
         xdim, ydim = img.size
         if verbose and logfile:
             logfile.write("saved updated image to " + dest 
-                    + " (" + str(xdim) + "x" + str(ydim) + ")\n")
+                          + " (" + str(xdim) + "x" + str(ydim) + ")\n")
 
         dest_ary.append(dest)
         
@@ -188,6 +197,7 @@ if __name__ == "__main__":
         upload = False
     else:
         if args.verbose:
+            logfile.write("Verbose output\n")
             logfile.write("URL: " + url + '\n')
             logfile.write("User: " + user + '\n')
 
