@@ -41,7 +41,7 @@ Usage Overview:
       -C [CONFIG], --config [CONFIG]
                             set config file
     
-    BrokenLogo internet Production (BLiP) Kevin Somervill copyright 2015
+    BrokenLogo internet Production (BLiP) Kevin Somervill copyright 2016
 
 
 I wrote this for my wife. She abhors commandline tools so I created a desktop
