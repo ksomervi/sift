@@ -61,6 +61,7 @@ def parse_arguments():
     args = parser.parse_args()
     return args
 
+
 # This part taken blatantly from Kyle Fox's fix_orientation patch. This will
 # be integrated such that it's not a plain copy and paste.
 
@@ -140,6 +141,7 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
         
     return dest_ary
 
+
 def upload_images(client, image_ary, verbose=False, logfile=None):
     data = {}
     for filename in image_ary:
@@ -177,6 +179,7 @@ def upload_images(client, image_ary, verbose=False, logfile=None):
             logfile.write("[id: " + response['id'] + "] ")
             logfile.write("mimetype: " + response['type'] + "\n")
             logfile.write("    url: " + response['url'] + "\n")
+
 
 if __name__ == "__main__":
     # Open a log file
