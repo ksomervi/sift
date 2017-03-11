@@ -12,10 +12,10 @@
 import argparse
 import configparser
 from datetime import date
-import mimetypes
+#import mimetypes
 import os
-import subprocess
-from PIL import Image, ImageFile
+#import subprocess
+from PIL import Image #, ImageFile
 
 from wordpress_xmlrpc import Client, WordPressPost
 from wordpress_xmlrpc.compat import xmlrpc_client
@@ -95,7 +95,7 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
         xpix, ypix = img.size
         if args.debug and logfile:
             logfile.write("Image dimensions before rotation: "
-                  + " (" + str(xpix) + "x" + str(ypix) + ")\n")
+                          + " (" + str(xpix) + "x" + str(ypix) + ")\n")
 
         if rotate_images and (img.format == 'JPEG'):
             if args.debug:
@@ -106,27 +106,27 @@ def process_images(image_ary, max_width, out_dir, verbose, logfile=None):
             except (TypeError, AttributeError, KeyError):
                 raise ValueError("Image file has no EXIF data.")
 
-            print("Orientation: (" + str(orientation) + ") "
-                    + ORIENTATIONS[orientation][0])
+            print(filename + " orientation: (" + str(orientation) + ") "
+                  + ORIENTATIONS[orientation][0])
 
             # Fix the orientation if not correct
-            if orientation in [3,6,8]:
+            if orientation in [3, 6, 8]:
                 degrees = ORIENTATIONS[orientation][1]
                 print("rotating image " + str(degrees) + " degrees" )
                 img = img.rotate(degrees, expand=True)
 
         xpix, ypix = img.size
         if args.debug and logfile:
-            logfle.write("Image dimensions after rotation: "
-                  + " (" + str(xpix) + "x" + str(ypix) + ")\n")
+            logfile.write("Image dimensions after rotation: "
+                          + " (" + str(xpix) + "x" + str(ypix) + ")\n")
 
         # Resize the image
         if max_width > 0 and max_width < xpix:
             scale = float(max_width)/float(xpix)
-            ydim  = int(scale*ypix)
+            ydim = int(scale*ypix)
             if verbose and logfile:
                 logfile.write("Resizing image to (" + str(max_width)
-                        + "x" + str(ydim) +")\n")
+                              + "x" + str(ydim) +")\n")
             img = img.resize((max_width, ydim))
 
         # Add mark if requested
@@ -204,7 +204,7 @@ if __name__ == "__main__":
             logfile.write("URL: " + url + '\n')
             logfile.write("User: " + user + '\n')
 
-    if upload == False:
+    if not upload:# == False:
         logfile.write("Not uploading images.\n")
 
     max_width = config.getint('image', 'max_width', fallback=0)
