@@ -21,7 +21,7 @@ from wordpress_xmlrpc import Client, WordPressPost
 from wordpress_xmlrpc.compat import xmlrpc_client
 from wordpress_xmlrpc.methods import media, posts
 
-SIFT_VERSION = "1.05"
+SIFT_VERSION = "1.06"
 
 def parse_configuration(cfg_file, logfile, verbose=False):
     config = configparser.ConfigParser()
